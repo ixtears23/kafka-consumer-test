@@ -1,1 +1,1 @@
-# inflearn-rest
+# Rest API Sample
