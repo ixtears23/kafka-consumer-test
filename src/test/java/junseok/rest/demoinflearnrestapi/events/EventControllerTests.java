@@ -6,7 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
@@ -21,7 +23,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(SpringExtension.class)
-@WebMvcTest // slice Test 이기 때문에 Web용 Bean만 등록을 해주지 Repository Bean은 등록해 주지 않는다.
+@SpringBootTest
+@AutoConfigureMockMvc
 class EventControllerTests {
 
     @Autowired
@@ -29,9 +32,6 @@ class EventControllerTests {
 
     @Autowired
     ObjectMapper objectMapper;
-
-    @MockBean
-    EventRepository eventRepository;
 
     @Test
     void createEvent() throws Exception {
@@ -49,9 +49,8 @@ class EventControllerTests {
                 .location("강남역 D2 스타텁 팩토리")
                 .free(true)
                 .offline(false)
+                .eventStatus(EventStatus.PUBLISHED)
                 .build();
-
-        Mockito.when(eventRepository.save(event)).thenReturn(event);
 
         mockMvc.perform(post("/api/events/")
                     .contentType(MediaType.APPLICATION_JSON_UTF8)
@@ -64,7 +63,8 @@ class EventControllerTests {
                 .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_VALUE))
                 .andExpect(header().string("Content-Type", "application/hal+json"))
                 .andExpect(jsonPath("id").value(Matchers.not(100)))
-                .andExpect(jsonPath("free").value(Matchers.not(true)));
+                .andExpect(jsonPath("free").value(Matchers.not(true)))
+                .andExpect(jsonPath("eventStatus").value(Matchers.not(EventStatus.DRAFT)));
     }
 
 }
