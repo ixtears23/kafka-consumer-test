@@ -1,10 +1,8 @@
 package org.example;
 
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
@@ -12,6 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 public class SimpleConsumer {
@@ -33,8 +33,15 @@ public class SimpleConsumer {
 
         while (true) {
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(5));
+            Map<TopicPartition, OffsetAndMetadata> currentOffset = new HashMap<>();
+
             for (ConsumerRecord<String, String> record : records) {
                 logger.info("{}", record);
+                currentOffset.put(
+                        new TopicPartition(record.topic(), record.partition()),
+                        new OffsetAndMetadata(record.offset() + 1, null)
+                );
+                consumer.commitSync(currentOffset);
             }
             consumer.commitSync();
         }
