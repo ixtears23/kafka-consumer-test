@@ -33,17 +33,10 @@ public class SimpleConsumer {
 
         while (true) {
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(5));
-            Map<TopicPartition, OffsetAndMetadata> currentOffset = new HashMap<>();
-
             for (ConsumerRecord<String, String> record : records) {
                 logger.info("{}", record);
-                currentOffset.put(
-                        new TopicPartition(record.topic(), record.partition()),
-                        new OffsetAndMetadata(record.offset() + 1, null)
-                );
-                consumer.commitSync(currentOffset);
             }
-            consumer.commitSync();
+            consumer.commitAsync();
         }
 
     }
