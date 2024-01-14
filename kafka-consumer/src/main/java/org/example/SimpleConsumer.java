@@ -37,20 +37,17 @@ public class SimpleConsumer {
                 logger.info("{}", record);
             }
             consumer.commitAsync(
-                    new OffsetCommitCallback() {
-                        @Override
-                        public void onComplete(Map<TopicPartition, OffsetAndMetadata> offsets, Exception exception) {
-                            if (exception != null) {
-                                logger.error("=== Commit Failed", exception);
-                            } else {
-                                logger.info("=== Commit Succeeded");
-                            }
-
-                            if (exception != null) {
-                                logger.error("Commit failed for offsets {}", offsets, exception);
-                            }
-
+                    (offsets, exception) -> {
+                        if (exception != null) {
+                            logger.error("=== Commit Failed", exception);
+                        } else {
+                            logger.info("=== Commit Succeeded");
                         }
+
+                        if (exception != null) {
+                            logger.error("Commit failed for offsets {}", offsets, exception);
+                        }
+
                     }
             );
         }
