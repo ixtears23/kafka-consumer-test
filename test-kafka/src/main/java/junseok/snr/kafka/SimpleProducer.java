@@ -30,8 +30,7 @@ public class SimpleProducer {
         final int partitionNo = 0;
         final ProducerRecord<String, String> record = new ProducerRecord<>(TOPIC_NAME, messageValue);
         logger.info("=== record : {}", record);
-        RecordMetadata recordMetadata = producer.send(record).get();
-        logger.info("=== recordMetadata : {}", recordMetadata);
+        producer.send(record, new ProducerCallback());
         producer.flush();
         producer.close();
     }
