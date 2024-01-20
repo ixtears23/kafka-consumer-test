@@ -9,16 +9,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 public class SimpleConsumer {
     private static final Logger logger = LoggerFactory.getLogger(SimpleConsumer.class);
     private static final String TOPIC_NAME = "test";
     private static final String BOOTSTRAP_SERVERS = "test.kafka:9092";
     private static final String GROUP_ID = "test-group";
+    private static KafkaConsumer<String, String> consumer;
 
     public static void main(String[] args) {
         final Properties configs = new Properties();
@@ -28,8 +26,8 @@ public class SimpleConsumer {
         configs.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         configs.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
 
-        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(configs);
-        consumer.subscribe(Arrays.asList(TOPIC_NAME));
+        consumer = new KafkaConsumer<>(configs);
+        consumer.subscribe(Arrays.asList(TOPIC_NAME), new RebalanceListener());
 
         while (true) {
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(5));
@@ -52,5 +50,19 @@ public class SimpleConsumer {
             );
         }
 
+    }
+
+    private static class RebalanceListener implements ConsumerRebalanceListener {
+
+        @Override
+        public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+            logger.warn("Partitions are assigned");
+        }
+
+        @Override
+        public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+            logger.warn("Partitions are revoked");
+            consumer.commitSync();
+        }
     }
 }
